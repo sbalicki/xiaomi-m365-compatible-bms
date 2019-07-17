@@ -16,8 +16,8 @@
 
 #include <Arduino.h>
 #include <math.h>     // log for thermistor calculation
-#include "main.h"
 #include "bq769x0.h"
+#include "config.h"
 
 /* Software I2C */
 #include <SoftWire.h>
@@ -124,8 +124,7 @@ uint8_t bq769x0::begin(uint8_t bootPin)
             break;
 
         #if BQ769X0_DEBUG
-        if(g_Debug)
-            Serial.println(F("BMS communication error"));
+        Serial.println(F("BMS communication error"));
         #endif
         delay(250);
     }
@@ -190,8 +189,7 @@ uint8_t bq769x0::checkStatus()
                 // datasheet recommendation: try to clear after waiting a few seconds
                 if (secSinceInterrupt >= 3) {
                     #if BQ769X0_DEBUG
-                    if(g_Debug)
-                        Serial.println(F("Attempting to clear XR error"));
+                    Serial.println(F("Attempting to clear XR error"));
                     #endif
                     errorCounter_[ERROR_XREADY]++;
                     writeRegister(SYS_STAT, STAT_DEVICE_XREADY);
@@ -202,8 +200,7 @@ uint8_t bq769x0::checkStatus()
             if (sys_stat.bits.OVRD_ALERT) { // Alert error
                 chargingEnabled_ = dischargingEnabled_ = false;
                 #if BQ769X0_DEBUG
-                if(g_Debug)
-                    Serial.println(F("Attempting to clear Alert error"));
+                Serial.println(F("Attempting to clear Alert error"));
                 #endif
                 errorCounter_[ERROR_ALERT]++;
                 writeRegister(SYS_STAT, STAT_OVRD_ALERT);
@@ -215,8 +212,7 @@ uint8_t bq769x0::checkStatus()
                 updateVoltages();
                 if (cellVoltages_[idCellMinVoltage_] > minCellVoltage_) {
                     #if BQ769X0_DEBUG
-                    if(g_Debug)
-                        Serial.println(F("Attempting to clear UV error"));
+                    Serial.println(F("Attempting to clear UV error"));
                     #endif
                     errorCounter_[ERROR_UVP]++;
                     writeRegister(SYS_STAT, STAT_UV);
@@ -228,8 +224,7 @@ uint8_t bq769x0::checkStatus()
                 updateVoltages();
                 if (cellVoltages_[idCellMaxVoltage_] < maxCellVoltage_) {
                     #if BQ769X0_DEBUG
-                    if(g_Debug)
-                        Serial.println(F("Attempting to clear OV error"));
+                    Serial.println(F("Attempting to clear OV error"));
                     #endif
                     errorCounter_[ERROR_OVP]++;
                     writeRegister(SYS_STAT, STAT_OV);
@@ -240,8 +235,7 @@ uint8_t bq769x0::checkStatus()
                 dischargingEnabled_ = false;
                 if (secSinceInterrupt >= 10) {
                     #if BQ769X0_DEBUG
-                    if(g_Debug)
-                        Serial.println(F("Attempting to clear SCD error"));
+                    Serial.println(F("Attempting to clear SCD error"));
                     #endif
                     errorCounter_[ERROR_SCD]++;
                     writeRegister(SYS_STAT, STAT_SCD);
@@ -252,8 +246,7 @@ uint8_t bq769x0::checkStatus()
                 dischargingEnabled_ = false;
                 if (secSinceInterrupt >= 10) {
                     #if BQ769X0_DEBUG
-                    if(g_Debug)
-                        Serial.println(F("Attempting to clear OCD error"));
+                    Serial.println(F("Attempting to clear OCD error"));
                     #endif
                     errorCounter_[ERROR_OCD]++;
                     writeRegister(SYS_STAT, STAT_OCD);
@@ -298,16 +291,14 @@ bool bq769x0::enableCharging()
 {
     uint8_t status = checkStatus();
     #if BQ769X0_DEBUG
-    if(g_Debug) {
-        Serial.print(F("checkStatus() = "));
-        Serial.println(status);
-        Serial.print(F("Umax = "));
-        Serial.println(cellVoltages_[idCellMaxVoltage_]);
-        Serial.print(F("temperatures[min, max] = "));
-        Serial.print(getLowestTemperature());
-        Serial.print(F(", "));
-        Serial.println(getHighestTemperature());
-    }
+    Serial.print(F("checkStatus() = "));
+    Serial.println(status);
+    Serial.print(F("Umax = "));
+    Serial.println(cellVoltages_[idCellMaxVoltage_]);
+    Serial.print(F("temperatures[min, max] = "));
+    Serial.print(getLowestTemperature());
+    Serial.print(F(", "));
+    Serial.println(getHighestTemperature());
     #endif
 
     if (status == 0 &&
@@ -320,8 +311,7 @@ bool bq769x0::enableCharging()
         writeRegister(SYS_CTRL2, sys_ctrl2 | 0b00000001);  // switch CHG on
         chargingEnabled_ = true;
         #if BQ769X0_DEBUG
-        if(g_Debug)
-            Serial.println(F("Enabling CHG FET"));
+        Serial.println(F("Enabling CHG FET"));
         #endif
         return true;
     }
@@ -339,8 +329,7 @@ void bq769x0::disableCharging()
     writeRegister(SYS_CTRL2, sys_ctrl2 & ~0b00000001);  // switch CHG off
     chargingEnabled_ = false;
     #if BQ769X0_DEBUG
-    if(g_Debug)
-        Serial.println(F("Disabling CHG FET"));
+    Serial.println(F("Disabling CHG FET"));
     #endif
 }
 
@@ -350,16 +339,14 @@ bool bq769x0::enableDischarging()
 {
     uint8_t status = checkStatus();
     #if BQ769X0_DEBUG
-    if(g_Debug) {
-        Serial.print(F("checkStatus() = "));
-        Serial.println(status);
-        Serial.print(F("Umin = "));
-        Serial.println(cellVoltages_[idCellMinVoltage_]);
-        Serial.print(F("temperatures[min, max] = "));
-        Serial.print(getLowestTemperature());
-        Serial.print(F(", "));
-        Serial.println(getHighestTemperature());
-    }
+    Serial.print(F("checkStatus() = "));
+    Serial.println(status);
+    Serial.print(F("Umin = "));
+    Serial.println(cellVoltages_[idCellMinVoltage_]);
+    Serial.print(F("temperatures[min, max] = "));
+    Serial.print(getLowestTemperature());
+    Serial.print(F(", "));
+    Serial.println(getHighestTemperature());
     #endif
 
     if (status == 0 &&
@@ -372,8 +359,7 @@ bool bq769x0::enableDischarging()
         writeRegister(SYS_CTRL2, sys_ctrl2 | 0b00000010);  // switch DSG on
         dischargingEnabled_ = true;
         #if BQ769X0_DEBUG
-        if(g_Debug)
-            Serial.println(F("Enabling DISCHG FET"));
+        Serial.println(F("Enabling DISCHG FET"));
         #endif
         return true;
     }
@@ -391,8 +377,7 @@ void bq769x0::disableDischarging()
     writeRegister(SYS_CTRL2, sys_ctrl2 & ~0b00000010);  // switch DSG off
     dischargingEnabled_ = false;
     #if BQ769X0_DEBUG
-    if(g_Debug)
-        Serial.println(F("Disabling DISCHG FET"));
+    Serial.println(F("Disabling DISCHG FET"));
     #endif
 }
 
@@ -485,12 +470,10 @@ void bq769x0::updateBalancingSwitches(void)
             }
 
             #if BQ769X0_DEBUG
-            if(g_Debug) {
-                Serial.print(F("Setting CELLBAL"));
-                Serial.print(section+1);
-                Serial.print(F(" register to: "));
-                Serial.println(byte2char(balancingFlags));
-            }
+            Serial.print(F("Setting CELLBAL"));
+            Serial.print(section+1);
+            Serial.print(F(" register to: "));
+            Serial.println(byte2char(balancingFlags));
             #endif
 
             balancingStatus_ |= balancingFlags << section*5;
@@ -506,10 +489,8 @@ void bq769x0::updateBalancingSwitches(void)
         for (uint8_t section = 0; section < numberOfSections; section++)
         {
             #if BQ769X0_DEBUG
-            if(g_Debug) {
-                Serial.print(F("Clearing Register CELLBAL"));
-                Serial.println(section+1);
-            }
+            Serial.print(F("Clearing Register CELLBAL"));
+            Serial.println(section+1);
             #endif
 
             writeRegister(CELLBAL1+section, 0x0);
@@ -582,13 +563,11 @@ void bq769x0::resetSOC(int percent)
     else  // reset based on OCV
     {
         #if BQ769X0_DEBUG
-        if(g_Debug) {
-            Serial.print(F("NumCells: "));
-            Serial.print(getNumberOfConnectedCells());
-            Serial.print(F(", voltage: "));
-            Serial.print(getBatteryVoltage());
-            Serial.println(F("V"));
-        }
+        Serial.print(F("NumCells: "));
+        Serial.print(getNumberOfConnectedCells());
+        Serial.print(F(", voltage: "));
+        Serial.print(getBatteryVoltage());
+        Serial.println(F("V"));
         #endif
         uint16_t voltage = getBatteryVoltage() / getNumberOfConnectedCells();
 
