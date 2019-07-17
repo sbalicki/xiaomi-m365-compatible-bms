@@ -64,6 +64,11 @@ And to fix the shunt voltage from getting cut in half two more small resistors a
 
 **Do not connect GND from the BMS to the M365 anywhere! P- is GND for the M365! The only extra wires going from the BMS to the M365 are RX and TX!**
 
+### Battery cover spacer
+New battery is thicker than the original one so you will need an additional spacer between the battery cover and the M365 board. The sample 3D model is in hardware/3d/spacer.
+
+Source: [M365 battery spacer](https://www.thingiverse.com/thing:3731368).
+
 ## Software
 ### Configuration
 Depending on your battery you might want to configure some of the settings here: [src/main.h](src/main.h#L24)
